@@ -441,25 +441,25 @@ Won't Have（MVP阶段明确不做）
 ## 10.1 用户表 user
 ```sql
 CREATE TABLE `user` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-    `phone` VARCHAR(20) NOT NULL COMMENT '手机号（加密存储）',
-    `password_hash` VARCHAR(128) NOT NULL COMMENT 'bcrypt 密码哈希',
-    `nickname` VARCHAR(50) NOT NULL COMMENT '昵称（唯一）',
-    `avatar_url` VARCHAR(255) DEFAULT NULL COMMENT '头像URL（系统插画库选择，非真人照片）',
-    `status_label` VARCHAR(50) DEFAULT NULL COMMENT '当前状态标签：在校学生/在职/求职中/自由职业',
-    `confusion_tags` JSON DEFAULT NULL COMMENT '核心困惑领域标签：["职业方向","原生家庭","人际关系","自我认知","情绪管理"]',
-    `companion_style` VARCHAR(20) DEFAULT NULL COMMENT '陪伴偏好：STRICT/ENCOURAGING/QUIET',
-    `trust_level` TINYINT NOT NULL DEFAULT 1 COMMENT '信任等级：1=手机验证 2=身份认证 3=认证陪伴者',
-    `role` VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色：USER/ADMIN',
-    `is_frozen` TINYINT NOT NULL DEFAULT 0 COMMENT '是否被冻结：0=正常 1=冻结（禁止私聊）',
-    `signed_community_rule` TINYINT NOT NULL DEFAULT 0 COMMENT '是否签署社区公约：0=未签署 1=已签署',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_phone` (`phone`),
-    UNIQUE KEY `uk_nickname` (`nickname`),
-    INDEX `idx_trust_level` (`trust_level`),
-    INDEX `idx_status_label` (`status_label`)
+                        `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+                        `phone` VARCHAR(20) NOT NULL COMMENT '手机号（加密存储）',
+                        `password_hash` VARCHAR(128) NOT NULL COMMENT 'bcrypt 密码哈希',
+                        `nickname` VARCHAR(50) NOT NULL COMMENT '昵称（唯一）',
+                        `avatar_url` VARCHAR(255) DEFAULT NULL COMMENT '头像URL（系统插画库选择，非真人照片）',
+                        `status_label` VARCHAR(50) DEFAULT NULL COMMENT '当前状态标签：在校学生/在职/求职中/自由职业',
+                        `confusion_tags` JSON DEFAULT NULL COMMENT '核心困惑领域标签：["职业方向","原生家庭","人际关系","自我认知","情绪管理"]',
+                        `companion_style` VARCHAR(20) DEFAULT NULL COMMENT '陪伴偏好：STRICT/ENCOURAGING/QUIET',
+                        `trust_level` TINYINT NOT NULL DEFAULT 1 COMMENT '信任等级：1=手机验证 2=身份认证 3=认证陪伴者',
+                        `role` VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色：USER/ADMIN',
+                        `is_frozen` TINYINT NOT NULL DEFAULT 0 COMMENT '是否被冻结：0=正常 1=冻结（禁止私聊）',
+                        `signed_community_rule` TINYINT NOT NULL DEFAULT 0 COMMENT '是否签署社区公约：0=未签署 1=已签署',
+                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY `uk_phone` (`phone`),
+                        UNIQUE KEY `uk_nickname` (`nickname`),
+                        INDEX `idx_trust_level` (`trust_level`),
+                        INDEX `idx_status_label` (`status_label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 ```
 
@@ -472,31 +472,34 @@ CREATE TABLE `user` (
 ## 10.2 困惑卡片表 confusion_card
 ```sql
 CREATE TABLE `confusion_card` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '卡片ID',
-    `user_id` BIGINT NOT NULL COMMENT '发布者ID',
-    `title` VARCHAR(100) DEFAULT NULL COMMENT '卡片标题（可选，用于列表展示）',
-    `event_description` TEXT NOT NULL COMMENT '具体事件描述（不少于30字）',
-    `emotion_tags` JSON NOT NULL COMMENT '情绪标签：["焦虑","迷茫","沮丧","孤独","愤怒","其他"]',
-    `attempt_description` TEXT NOT NULL COMMENT '我尝试过什么方法（不少于20字）',
-    `need_type` VARCHAR(20) NOT NULL COMMENT '我需要什么：EMPATHY/ADVICE/COMPANION',
-    `confusion_tags` JSON NOT NULL COMMENT '困惑领域标签：["职业方向","原生家庭","人际关系","自我认知","情绪管理","其他"]',
-    `status` VARCHAR(20) NOT NULL DEFAULT 'PUBLISHED' COMMENT '卡片状态：DRAFT/PUBLISHED/RESOLVED/HIDDEN',
-    `resolution_content` TEXT DEFAULT NULL COMMENT '复盘内容（状态变为RESOLVED时必填）',
-    `resolved_at` DATETIME DEFAULT NULL COMMENT '标记“已走出来”的时间',
-    `thanks_count` INT NOT NULL DEFAULT 0 COMMENT '被感谢次数（聚合字段）',
-    `reply_count` INT NOT NULL DEFAULT 0 COMMENT '回复数（聚合字段）',
-    `view_count` INT NOT NULL DEFAULT 0 COMMENT '浏览数',
-    `heat_score` DOUBLE NOT NULL DEFAULT 0 COMMENT '热度分（用于排序）',
-    `is_pinned` TINYINT NOT NULL DEFAULT 0 COMMENT '是否置顶（管理员操作）',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_status` (`status`),
-    INDEX `idx_need_type` (`need_type`),
-    INDEX `idx_heat_score` (`heat_score` DESC),
-    INDEX `idx_created_at` (`created_at` DESC),
-    INDEX `idx_confusion_tags` (`confusion_tags`(255))
+                                  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '卡片ID',
+                                  `user_id` BIGINT NOT NULL COMMENT '发布者ID',
+                                  `title` VARCHAR(100) DEFAULT NULL COMMENT '卡片标题（可选，用于列表展示）',
+                                  `event_description` TEXT NOT NULL COMMENT '具体事件描述（不少于30字）',
+                                  `emotion_tags` JSON NOT NULL COMMENT '情绪标签',
+                                  `attempt_description` TEXT NOT NULL COMMENT '我尝试过什么方法（不少于20字）',
+                                  `need_type` VARCHAR(20) NOT NULL COMMENT '我需要什么：EMPATHY/ADVICE/COMPANION',
+                                  `confusion_tags` JSON NOT NULL COMMENT '困惑领域标签',
+    -- 虚拟列，用于索引
+                                  `confusion_tags_text` VARCHAR(500) GENERATED ALWAYS AS (confusion_tags->>'$') VIRTUAL,
+                                  `status` VARCHAR(20) NOT NULL DEFAULT 'PUBLISHED',
+                                  `resolution_content` TEXT DEFAULT NULL,
+                                  `resolved_at` DATETIME DEFAULT NULL,
+                                  `thanks_count` INT NOT NULL DEFAULT 0,
+                                  `reply_count` INT NOT NULL DEFAULT 0,
+                                  `view_count` INT NOT NULL DEFAULT 0,
+                                  `heat_score` DOUBLE NOT NULL DEFAULT 0,
+                                  `is_pinned` TINYINT NOT NULL DEFAULT 0,
+                                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                  PRIMARY KEY (`id`),
+                                  INDEX `idx_user_id` (`user_id`),
+                                  INDEX `idx_status` (`status`),
+                                  INDEX `idx_need_type` (`need_type`),
+                                  INDEX `idx_heat_score` (`heat_score` DESC),
+                                  INDEX `idx_created_at` (`created_at` DESC),
+    -- 索引建在虚拟列上
+                                  INDEX `idx_confusion_tags` (`confusion_tags_text`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='困惑卡片表';
 ```
 
@@ -509,21 +512,21 @@ CREATE TABLE `confusion_card` (
 ## 10.3 回复表 reply
 ```sql
 CREATE TABLE `reply` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '回复ID',
-    `card_id` BIGINT NOT NULL COMMENT '所属卡片ID',
-    `user_id` BIGINT NOT NULL COMMENT '回复者ID',
-    `parent_id` BIGINT DEFAULT NULL COMMENT '父回复ID（支持楼中楼，暂不用）',
-    `experience_situation` TEXT NOT NULL COMMENT '我当时的情况',
-    `experience_action` TEXT NOT NULL COMMENT '我的行动',
-    `experience_result` TEXT NOT NULL COMMENT '我的结果与反思',
-    `reply_type` VARCHAR(20) NOT NULL DEFAULT 'EXPERIENCE' COMMENT '回复类型：EXPERIENCE=经验分享 SUPPORT=情感支持',
-    `thanks_count` INT NOT NULL DEFAULT 0 COMMENT '被感谢次数',
-    `is_hidden` TINYINT NOT NULL DEFAULT 0 COMMENT '是否被隐藏（举报触发）',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_card_id` (`card_id`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_card_id_thanks` (`card_id`, `thanks_count` DESC)
+                         `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '回复ID',
+                         `card_id` BIGINT NOT NULL COMMENT '所属卡片ID',
+                         `user_id` BIGINT NOT NULL COMMENT '回复者ID',
+                         `parent_id` BIGINT DEFAULT NULL COMMENT '父回复ID（支持楼中楼，暂不用）',
+                         `experience_situation` TEXT NOT NULL COMMENT '我当时的情况',
+                         `experience_action` TEXT NOT NULL COMMENT '我的行动',
+                         `experience_result` TEXT NOT NULL COMMENT '我的结果与反思',
+                         `reply_type` VARCHAR(20) NOT NULL DEFAULT 'EXPERIENCE' COMMENT '回复类型：EXPERIENCE=经验分享 SUPPORT=情感支持',
+                         `thanks_count` INT NOT NULL DEFAULT 0 COMMENT '被感谢次数',
+                         `is_hidden` TINYINT NOT NULL DEFAULT 0 COMMENT '是否被隐藏（举报触发）',
+                         `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                         PRIMARY KEY (`id`),
+                         INDEX `idx_card_id` (`card_id`),
+                         INDEX `idx_user_id` (`user_id`),
+                         INDEX `idx_card_id_thanks` (`card_id`, `thanks_count` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='回复表';
 ```
 
@@ -535,74 +538,77 @@ CREATE TABLE `reply` (
 ## 10.4 感谢记录表 thanks_record
 ```sql
 CREATE TABLE `thanks_record` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT NOT NULL COMMENT '感谢者ID',
-    `target_type` VARCHAR(20) NOT NULL COMMENT '目标类型：CARD/REPLY',
-    `target_id` BIGINT NOT NULL COMMENT '目标ID',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_user_target` (`user_id`, `target_type`, `target_id`),
-    INDEX `idx_target` (`target_type`, `target_id`)
+                                 `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                 `user_id` BIGINT NOT NULL COMMENT '感谢者ID',
+                                 `target_type` VARCHAR(20) NOT NULL COMMENT '目标类型：CARD/REPLY',
+                                 `target_id` BIGINT NOT NULL COMMENT '目标ID',
+                                 `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                 PRIMARY KEY (`id`),
+                                 UNIQUE KEY `uk_user_target` (`user_id`, `target_type`, `target_id`),
+                                 INDEX `idx_target` (`target_type`, `target_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='感谢记录表（防止重复感谢）';
 ```
 
 ## 10.5 陪伴计划表 companion_plan
 ```sql
 CREATE TABLE `companion_plan` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '计划ID',
-    `creator_id` BIGINT NOT NULL COMMENT '创建者ID',
-    `title` VARCHAR(100) NOT NULL COMMENT '计划标题：如“21天求职冲刺陪伴”',
-    `goal_description` TEXT NOT NULL COMMENT '目标描述',
-    `confusion_tags` JSON NOT NULL COMMENT '关联困惑领域',
-    `duration_days` INT NOT NULL DEFAULT 21 COMMENT '计划周期（天）',
-    `checkin_frequency` VARCHAR(20) NOT NULL COMMENT '打卡频率：DAILY/WEEKLY/CUSTOM',
-    `companion_style_preferred` VARCHAR(20) DEFAULT NULL COMMENT '期望陪伴风格：STRICT/ENCOURAGING/QUIET/ANY',
-    `status` VARCHAR(20) NOT NULL DEFAULT 'SEEKING' COMMENT '计划状态：SEEKING=寻找同伴中 IN_PROGRESS=进行中 COMPLETED=已完成 CANCELLED=已取消',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_creator` (`creator_id`),
-    INDEX `idx_status` (`status`),
-    INDEX `idx_confusion_tags` (`confusion_tags`(255))
+                                  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '计划ID',
+                                  `creator_id` BIGINT NOT NULL COMMENT '创建者ID',
+                                  `title` VARCHAR(100) NOT NULL COMMENT '计划标题',
+                                  `goal_description` TEXT NOT NULL COMMENT '目标描述',
+                                  `confusion_tags` JSON NOT NULL COMMENT '关联困惑领域',
+    -- 虚拟列
+                                  `confusion_tags_text` VARCHAR(500) GENERATED ALWAYS AS (confusion_tags->>'$') VIRTUAL,
+                                  `duration_days` INT NOT NULL DEFAULT 21,
+                                  `checkin_frequency` VARCHAR(20) NOT NULL,
+                                  `companion_style_preferred` VARCHAR(20) DEFAULT NULL,
+                                  `status` VARCHAR(20) NOT NULL DEFAULT 'SEEKING',
+                                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                  PRIMARY KEY (`id`),
+                                  INDEX `idx_creator` (`creator_id`),
+                                  INDEX `idx_status` (`status`),
+    -- 索引建在虚拟列上
+                                  INDEX `idx_confusion_tags` (`confusion_tags_text`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='陪伴计划表';
 ```
 
 ## 10.6 陪伴关系表 companion_relation
 ```sql
 CREATE TABLE `companion_relation` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '关系ID',
-    `plan_id` BIGINT NOT NULL COMMENT '所属计划ID',
-    `inviter_id` BIGINT NOT NULL COMMENT '邀请人ID',
-    `invitee_id` BIGINT NOT NULL COMMENT '被邀请人ID',
-    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '关系状态：PENDING=等待确认 ACCEPTED=进行中 COMPLETED=已完成 CANCELLED=已取消 REJECTED=已拒绝',
-    `started_at` DATETIME DEFAULT NULL COMMENT '开始时间（接受邀请的时间）',
-    `ended_at` DATETIME DEFAULT NULL COMMENT '结束时间',
-    `daily_checkin_count` INT NOT NULL DEFAULT 0 COMMENT '双方总打卡次数（后续用）',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_plan_inviter_invitee` (`plan_id`, `inviter_id`, `invitee_id`),
-    INDEX `idx_invitee_status` (`invitee_id`, `status`),
-    INDEX `idx_status` (`status`)
+                                      `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '关系ID',
+                                      `plan_id` BIGINT NOT NULL COMMENT '所属计划ID',
+                                      `inviter_id` BIGINT NOT NULL COMMENT '邀请人ID',
+                                      `invitee_id` BIGINT NOT NULL COMMENT '被邀请人ID',
+                                      `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '关系状态：PENDING=等待确认 ACCEPTED=进行中 COMPLETED=已完成 CANCELLED=已取消 REJECTED=已拒绝',
+                                      `started_at` DATETIME DEFAULT NULL COMMENT '开始时间（接受邀请的时间）',
+                                      `ended_at` DATETIME DEFAULT NULL COMMENT '结束时间',
+                                      `daily_checkin_count` INT NOT NULL DEFAULT 0 COMMENT '双方总打卡次数（后续用）',
+                                      `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                      `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                      PRIMARY KEY (`id`),
+                                      UNIQUE KEY `uk_plan_inviter_invitee` (`plan_id`, `inviter_id`, `invitee_id`),
+                                      INDEX `idx_invitee_status` (`invitee_id`, `status`),
+                                      INDEX `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='陪伴关系表';
 ```
 
 ## 10.7 私聊消息表 private_message
 ```sql
 CREATE TABLE `private_message` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
-    `relation_id` BIGINT NOT NULL COMMENT '所属陪伴关系ID',
-    `sender_id` BIGINT NOT NULL COMMENT '发送者ID',
-    `receiver_id` BIGINT NOT NULL COMMENT '接收者ID',
-    `content` TEXT NOT NULL COMMENT '消息内容',
-    `content_type` VARCHAR(10) NOT NULL DEFAULT 'TEXT' COMMENT '消息类型：TEXT/IMAGE(后续)',
-    `is_read` TINYINT NOT NULL DEFAULT 0 COMMENT '是否已读',
-    `is_recalled` TINYINT NOT NULL DEFAULT 0 COMMENT '是否撤回',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_relation_id` (`relation_id`),
-    INDEX `idx_sender_receiver` (`sender_id`, `receiver_id`),
-    INDEX `idx_created_at` (`created_at`)
+                                   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+                                   `relation_id` BIGINT NOT NULL COMMENT '所属陪伴关系ID',
+                                   `sender_id` BIGINT NOT NULL COMMENT '发送者ID',
+                                   `receiver_id` BIGINT NOT NULL COMMENT '接收者ID',
+                                   `content` TEXT NOT NULL COMMENT '消息内容',
+                                   `content_type` VARCHAR(10) NOT NULL DEFAULT 'TEXT' COMMENT '消息类型：TEXT/IMAGE(后续)',
+                                   `is_read` TINYINT NOT NULL DEFAULT 0 COMMENT '是否已读',
+                                   `is_recalled` TINYINT NOT NULL DEFAULT 0 COMMENT '是否撤回',
+                                   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                   PRIMARY KEY (`id`),
+                                   INDEX `idx_relation_id` (`relation_id`),
+                                   INDEX `idx_sender_receiver` (`sender_id`, `receiver_id`),
+                                   INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='私聊消息表（仅限陪伴关系内的双方）';
 ```
 
@@ -613,19 +619,19 @@ CREATE TABLE `private_message` (
 ## 10.8 举报记录表 report_record
 ```sql
 CREATE TABLE `report_record` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT,
-    `reporter_id` BIGINT NOT NULL COMMENT '举报者ID',
-    `target_type` VARCHAR(20) NOT NULL COMMENT '目标类型：CARD/REPLY/MESSAGE/USER',
-    `target_id` BIGINT NOT NULL COMMENT '目标ID',
-    `reason` VARCHAR(50) NOT NULL COMMENT '举报原因：HARASSMENT/FAKE_INFO/HATE_SPEECH/OTHER',
-    `description` TEXT DEFAULT NULL COMMENT '补充说明',
-    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '处理状态：PENDING/RESOLVED/DISMISSED',
-    `handler_id` BIGINT DEFAULT NULL COMMENT '处理人ID',
-    `handle_result` VARCHAR(50) DEFAULT NULL COMMENT '处理结果',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_status` (`status`),
-    INDEX `idx_target` (`target_type`, `target_id`)
+                                 `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                 `reporter_id` BIGINT NOT NULL COMMENT '举报者ID',
+                                 `target_type` VARCHAR(20) NOT NULL COMMENT '目标类型：CARD/REPLY/MESSAGE/USER',
+                                 `target_id` BIGINT NOT NULL COMMENT '目标ID',
+                                 `reason` VARCHAR(50) NOT NULL COMMENT '举报原因：HARASSMENT/FAKE_INFO/HATE_SPEECH/OTHER',
+                                 `description` TEXT DEFAULT NULL COMMENT '补充说明',
+                                 `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '处理状态：PENDING/RESOLVED/DISMISSED',
+                                 `handler_id` BIGINT DEFAULT NULL COMMENT '处理人ID',
+                                 `handle_result` VARCHAR(50) DEFAULT NULL COMMENT '处理结果',
+                                 `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                 PRIMARY KEY (`id`),
+                                 INDEX `idx_status` (`status`),
+                                 INDEX `idx_target` (`target_type`, `target_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='举报记录表';
 ```
 
@@ -713,8 +719,8 @@ B接受  B拒绝      邀请人取消
 # 十二、模块包结构建议（Spring Boot 项目）  
 
 ```plain
-com.growthcommunity
-├── GrowthCommunityApplication.java
+com.tondo
+├── TondoApplication.java
 ├── common/                     // 公共类
 │   ├── config/                 // Spring 配置
 │   ├── exception/              // 全局异常处理
