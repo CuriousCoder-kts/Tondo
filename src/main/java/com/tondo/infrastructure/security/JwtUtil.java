@@ -1,12 +1,10 @@
 package com.tondo.infrastructure.security;
 
-import com.tondo.module.user.mapper.UserMapper;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -15,40 +13,69 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
+    private static final String CLAIM_ROLE = "role";
+    private static final String CLAIM_TYPE = "type";
+    private static final String TYPE_ACCESS = "access";
+    private static final String TYPE_REFRESH = "refresh";
+
     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Value("${jwt.refresh-expiration:2592000000}")
+    private long refreshExpiration;
+
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // 生成 token，放入 userId 和 role
-    public String generateToken(Long userId, String role) {
+    public String generateAccessToken(Long userId, String role) {
+        return buildToken(userId, role, TYPE_ACCESS, expiration);
+    }
+
+    public String generateRefreshToken(Long userId, String role) {
+        return buildToken(userId, role, TYPE_REFRESH, refreshExpiration);
+    }
+
+    private String buildToken(Long userId, String role, String type, long ttlMillis) {
         return Jwts.builder()
                 .subject(userId.toString())
-                .claim("role", role)
+                .claim(CLAIM_ROLE, role)
+                .claim(CLAIM_TYPE, type)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + ttlMillis))
                 .signWith(getKey())
                 .compact();
     }
 
-    // 从 token 中解析 userId
     public Long getUserIdFromToken(String token) {
-        return Long.parseLong(
-                getClaims(token).getSubject()
-        );
+        return Long.parseLong(getClaims(token).getSubject());
     }
 
-    // 从 token 中解析 role
     public String getRoleFromToken(String token) {
-        return getClaims(token).get("role", String.class);
+        return getClaims(token).get(CLAIM_ROLE, String.class);
     }
 
-    // 验证 token 是否有效
+    public boolean isAccessToken(String token) {
+        String type = getClaims(token).get(CLAIM_TYPE, String.class);
+        return type == null || TYPE_ACCESS.equals(type);
+    }
+
+    public boolean isRefreshToken(String token) {
+        return TYPE_REFRESH.equals(getClaims(token).get(CLAIM_TYPE, String.class));
+    }
+
+    public long getRemainingMillis(String token) {
+        try {
+            Date expiration = getClaims(token).getExpiration();
+            return Math.max(expiration.getTime() - System.currentTimeMillis(), 0);
+        } catch (ExpiredJwtException ex) {
+            return 0;
+        }
+    }
+
     public boolean validateToken(String token) {
         try {
             getClaims(token);
@@ -64,5 +91,9 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public long getAccessExpiration() {
+        return expiration;
     }
 }

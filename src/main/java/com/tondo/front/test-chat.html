@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Tondo 私聊测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #eee; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 600px; background: #16213e; border-radius: 12px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        h2 { text-align: center; margin-bottom: 20px; color: #e94560; }
+        .section { margin-bottom: 16px; }
+        label { display: block; font-size: 14px; margin-bottom: 6px; color: #a6a6a6; }
+        input, textarea { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #0f3460; background: #0f3460; color: #fff; font-size: 14px; outline: none; }
+        button { background: #e94560; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; margin-right: 8px; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        .status { padding: 8px 12px; border-radius: 4px; font-size: 14px; margin: 10px 0; }
+        .status.info { background: #0f3460; }
+        .status.error { background: #4e1a1a; color: #ff8080; }
+        .status.success { background: #1a4e1a; color: #80ff80; }
+        #messages { border: 1px solid #0f3460; border-radius: 8px; padding: 12px; height: 250px; overflow-y: auto; background: #0a0a1a; margin-bottom: 16px; }
+        .msg { margin-bottom: 8px; padding: 8px; background: #16213e; border-radius: 6px; }
+        .msg .sender { color: #e94560; font-weight: bold; }
+        .msg .time { font-size: 12px; color: #888; margin-left: 10px; }
+        .flex-row { display: flex; gap: 8px; align-items: center; }
+        .flex-row input { flex: 1; }
+        hr { border-color: #0f3460; margin: 16px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Tondo 私聊测试工具</h2>
+
+    <div class="section">
+        <label>JWT Token（登录后获得的token）</label>
+        <textarea id="tokenInput" rows="3" placeholder="粘贴 eyJhbGci..."></textarea>
+    </div>
+
+    <div class="flex-row">
+        <button id="connectBtn" onclick="connect()">连接</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>断开</button>
+    </div>
+
+    <div id="statusBar" class="status info">未连接</div>
+
+    <div class="section" id="chatArea" style="display: none;">
+        <label>当前用户ID：<strong id="myUserId"></strong></label>
+        <hr>
+        <label>陪伴关系ID (relationId)</label>
+        <input id="relationIdInput" type="number" placeholder="1">
+
+        <label>消息内容</label>
+        <div class="flex-row">
+            <input id="contentInput" type="text" placeholder="输入消息...">
+            <button id="sendBtn" onclick="sendMessage()">发送</button>
+        </div>
+
+        <label>实时消息记录</label>
+        <div id="messages"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+    let myUserId = null;
+
+    function setStatus(text, type = 'info') {
+        const bar = document.getElementById('statusBar');
+        bar.textContent = text;
+        bar.className = 'status ' + type;
+    }
+
+    function parseJwt(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+            ).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function connect() {
+        const token = document.getElementById('tokenInput').value.trim();
+        if (!token) {
+            setStatus('请输入JWT Token', 'error');
+            return;
+        }
+
+        const payload = parseJwt(token);
+        if (!payload || !payload.sub) {
+            setStatus('Token解析失败，请检查格式', 'error');
+            return;
+        }
+        myUserId = payload.sub;
+        document.getElementById('myUserId').textContent = myUserId;
+
+        const socket = new WebSocket('ws://localhost:8080/ws');
+        stompClient = Stomp.over(socket);
+
+        // 连接时在头中携带Token
+        stompClient.connect(
+            { Authorization: 'Bearer ' + token },
+            function onConnect() {
+                setStatus('连接成功！已订阅私聊队列', 'success');
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                document.getElementById('chatArea').style.display = 'block';
+
+                // 订阅个人私聊队列
+                stompClient.subscribe(
+                    '/user/' + myUserId + '/queue/private',
+                    function (message) {
+                        const msg = JSON.parse(message.body);
+                        displayMessage(msg);
+                    }
+                );
+            },
+            function onError() {
+                setStatus('连接失败！请检查Token或后端服务', 'error');
+            }
+        );
+    }
+
+    function disconnect() {
+        if (stompClient) {
+            stompClient.disconnect();
+            stompClient = null;
+            setStatus('已断开连接', 'info');
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('disconnectBtn').disabled = true;
+        }
+    }
+
+    function sendMessage() {
+        const relationId = document.getElementById('relationIdInput').value;
+        const content = document.getElementById('contentInput').value.trim();
+
+        if (!relationId || !content) {
+            setStatus('请输入关系ID和消息内容', 'error');
+            return;
+        }
+        if (!stompClient || !stompClient.connected) {
+            setStatus('WebSocket未连接', 'error');
+            return;
+        }
+
+        const payload = {
+            relationId: parseInt(relationId),
+            content: content
+        };
+
+        stompClient.send('/app/chat.private', {}, JSON.stringify(payload));
+        document.getElementById('contentInput').value = '';
+        // 本地也显示自己发出的消息（以便观察）
+        displayMessage({
+            senderId: myUserId,
+            content: content,
+            createdAt: new Date().toISOString()
+        }, true);
+    }
+
+    function displayMessage(msg, isSelf = false) {
+        const container = document.getElementById('messages');
+        const div = document.createElement('div');
+        div.className = 'msg';
+        const senderLabel = (msg.senderId == myUserId) ? '我' : ('用户' + msg.senderId);
+        const time = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString() : '';
+        div.innerHTML = `<span class="sender">${senderLabel}</span><span class="time">${time}</span><br>${escapeHtml(msg.content)}`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // 页面关闭时断开连接
+    window.onbeforeunload = function() {
+        if (stompClient) stompClient.disconnect();
+    };
+</script>
+</body>
+</html>

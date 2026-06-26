@@ -5,6 +5,7 @@ import com.tondo.common.response.Result;
 import com.tondo.module.card.entity.Card;
 import com.tondo.module.card.entity.dto.CreateCardDTO;
 import com.tondo.module.card.entity.dto.ResolveCardDTO;
+import com.tondo.module.card.entity.vo.CardVO;
 import com.tondo.module.card.service.CardService;
 import com.tondo.module.card.service.ThanksService;
 import jakarta.validation.Valid;
@@ -27,19 +28,17 @@ public class CardController {
     }
 
     @GetMapping("/{id}")
-    public Result<Card> getCard(@PathVariable Long id) {
-        Card card = cardService.getCardById(id);
-        return Result.success(card);
+    public Result<CardVO> getCard(@PathVariable Long id) {
+        return Result.success(cardService.getCardVO(id));
     }
 
     @GetMapping
-    public Result<Page<Card>> getCards(
+    public Result<Page<CardVO>> getCards(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String confusionTag,
             @RequestParam(defaultValue = "new") String sort) {
-        Page<Card> cards = cardService.getCards(page, size, confusionTag, sort);
-        return Result.success(cards);
+        return Result.success(cardService.getCardVOs(page, size, confusionTag, sort));
     }
 
     @PutMapping("/{id}/resolve")

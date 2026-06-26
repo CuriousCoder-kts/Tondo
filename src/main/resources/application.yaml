@@ -2,15 +2,60 @@ spring:
   application:
     name: tondo
   datasource:
-#    url: jdbc:mysql://localhost:3306/tondo?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
     url: jdbc:mysql://localhost:3306/tondo?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   data:
     redis:
       host: localhost
       port: 6379
+      timeout: 3000ms
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    out-of-order: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          multiplier: 2.0
+          max-interval: 10000
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+tondo:
+  mq:
+    notification-enabled: true
+    notification-exchange: tondo.notification.exchange
+    notification-queue: tondo.notification.push
+    notification-routing-key: notification.push
+    notification-dlq: tondo.notification.dlq
+  storage:
+    local-path: uploads
+    public-url-prefix: /uploads
 
 server:
   port: 8080
@@ -28,7 +73,40 @@ jwt:
   expiration: 604800000
 
 minio:
+  enabled: true
   endpoint: http://localhost:9090
   access-key: minioadmin
   secret-key: minioadmin
   bucket: tondo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: Tondo
+    description: Emotional growth community platform
+    version: 0.1.0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{userId:-}]"
+  level:
+    com.tondo.module.notification.mq: INFO

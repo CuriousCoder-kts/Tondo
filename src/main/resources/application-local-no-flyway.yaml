@@ -1,0 +1,4 @@
+# 本地 MySQL 5.7 且 Flyway 仍报错时，可用：spring.profiles.active=local-no-flyway
+spring:
+  flyway:
+    enabled: false

@@ -1,0 +1,37 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${TONDO_DB_URL:jdbc:mysql://localhost:3306/tondo?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${TONDO_DB_USER:root}
+    password: ${TONDO_DB_PASSWORD:}
+  data:
+    redis:
+      host: ${TONDO_REDIS_HOST:localhost}
+      port: ${TONDO_REDIS_PORT:6379}
+  rabbitmq:
+    host: ${TONDO_RABBITMQ_HOST:localhost}
+    port: ${TONDO_RABBITMQ_PORT:5672}
+    username: ${TONDO_RABBITMQ_USER:guest}
+    password: ${TONDO_RABBITMQ_PASSWORD:guest}
+
+jwt:
+  secret: ${TONDO_JWT_SECRET}
+  expiration: ${TONDO_JWT_EXPIRATION:604800000}
+
+minio:
+  enabled: ${TONDO_MINIO_ENABLED:true}
+  endpoint: ${TONDO_MINIO_ENDPOINT:http://localhost:9090}
+  access-key: ${TONDO_MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${TONDO_MINIO_SECRET_KEY:minioadmin}
+  bucket: ${TONDO_MINIO_BUCKET:tondo}
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+logging:
+  level:
+    root: INFO
+    com.tondo: INFO
