@@ -1,4 +1,4 @@
-# Tondo（同渡）
+# Tondo
 
 面向年轻群体的情感成长社区：匿名卡片分享、1:1 陪伴、私信、打卡、通知与内容治理。
 
@@ -9,7 +9,7 @@
 | 后端 | Spring Boot 3、Spring Security + JWT、MyBatis-Plus、Flyway |
 | 中间件 | MySQL 8、Redis、RabbitMQ、MinIO |
 | 实时 | STOMP over WebSocket |
-| 前端 | Vue 3 + Pinia + Element Plus（独立仓库 `tondo-frontend`） |
+| 前端 | Vue 3 + Pinia + Element Plus（`tondo-frontend`） |
 
 ## 快速启动
 
@@ -57,7 +57,7 @@ npm run dev
 | governance | 举报处理、管理端审计日志 |
 | file | 头像上传（MinIO） |
 
-## 私信与通知链路（面试重点）
+## 私信与通知链路
 
 1. 客户端 STOMP 发送到 `/app/chat.private`
 2. `ChatController` → `PrivateMessageService` 落库
@@ -84,12 +84,3 @@ java -jar tondo.jar --spring.profiles.active=prod
 
 测试 profile 使用 H2 内存库，关闭 RabbitMQ 与 MinIO。
 
-## 常见问题
-
-### Flyway：`Detected resolved migration not applied to database: 1`
-
-说明数据库在添加 `V1__core_schema.sql` 之前已执行过 V2–V4（常见于本地开发库）。
-
-项目已开启 `spring.flyway.out-of-order: true`，重启后会自动补跑 V1（`CREATE TABLE IF NOT EXISTS`，不会破坏已有数据），并继续执行 V5 通知表。
-
-若仍失败，在 MySQL 中确认 `flyway_schema_history` 后重启；或清空开发库后重新 `docker compose up -d` 再启动。
